@@ -1,0 +1,56 @@
+name: NorthStar Daily Checks
+
+on:
+  schedule:
+    # Runs at 7:00 AM Central (12:00 UTC) every day
+    - cron: '0 12 * * *'
+  workflow_dispatch:    # Allow manual trigger from GitHub UI
+
+jobs:
+  daily-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write config from secrets
+        run: |
+          cat > .env << EOF
+          SMTP_HOST=${{ secrets.SMTP_HOST }}
+          SMTP_PORT=${{ secrets.SMTP_PORT }}
+          SMTP_USER=${{ secrets.SMTP_USER }}
+          SMTP_PASS=${{ secrets.SMTP_PASS }}
+          ALERT_FROM=${{ secrets.ALERT_FROM }}
+          OWNER_EMAIL=${{ secrets.OWNER_EMAIL }}
+          TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM_NUMBER=${{ secrets.TWILIO_FROM_NUMBER }}
+          DATA_DIR=./data
+          EOF
+
+      - name: Restore data from cache
+        uses: actions/cache@v4
+        with:
+          path: data/
+          key: northstar-data-${{ github.run_id }}
+          restore-keys: northstar-data-
+
+      - name: Run daily checks
+        run: python scripts/daily_runner.py
+
+      - name: Run monthly report (1st of month only)
+        if: ${{ github.event.schedule == '0 12 * * *' }}
+        run: |
+          DAY=$(date +%-d)
+          if [ "$DAY" = "1" ]; then
+            python scripts/monthly_report.py
+          fi
