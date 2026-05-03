@@ -13,10 +13,26 @@ Logs every run with timestamp. Designed for unattended execution.
 Schedule: 0 7 * * * python3 /path/to/scripts/daily_runner.py >> /var/log/northstar.log 2>&1
 """
 
+import argparse
+from utils.notifier import send_alert
 import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
+
+# ── CLI Arguments ───────────────────────────────────────────────
+parser = argparse.ArgumentParser(description="NorthStar Daily Checks")
+parser.add_argument(
+    "--test-email",
+    action="store_true",
+    help="Send a test email to verify SMTP configuration and exit."
+)
+parser.add_argument(
+    "--dry-run",
+    action="store_true",
+    help="Run checks without sending alerts."
+)
+args = parser.parse_args()
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
@@ -102,10 +118,21 @@ def run_daily_checks(dry_run: bool = False) -> dict:
 
 
 if __name__ == "__main__":
-    dry_run = "--dry-run" in sys.argv
+
+    # ── Test Email Mode ──────────────────────────────────────────
+    if args.test_email:
+        send_alert(
+            subject="NorthStar Test Email",
+            body="This is a test email from the NorthStar Daily Checks workflow. SMTP configuration is working."
+        )
+        print("Test email sent successfully.")
+        sys.exit(0)
+
+    # ── Normal Daily Run ─────────────────────────────────────────
     try:
-        run_daily_checks(dry_run=dry_run)
+        run_daily_checks(dry_run=args.dry_run)
     except Exception:
         print("FATAL ERROR in daily runner:")
         traceback.print_exc()
         sys.exit(1)
+
