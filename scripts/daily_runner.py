@@ -12,7 +12,15 @@ The main cron entry point. Run once daily — does everything:
 Logs every run with timestamp. Designed for unattended execution.
 Schedule: 0 7 * * * python3 /path/to/scripts/daily_runner.py >> /var/log/northstar.log 2>&1
 """
+import sys
+from pathlib import Path
 
+# ── Ensure project root/src is importable BEFORE any other imports ─────────────
+ROOT = Path(__file__).resolve().parent.parent
+SRC = ROOT / "src"
+sys.path.insert(0, str(SRC))
+
+# ── Now safe to import project modules ─────────────────────────────────────────
 import argparse
 from utils.notifier import send_alert
 import sys
