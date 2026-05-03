@@ -28,6 +28,36 @@ TWILIO_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
 TWILIO_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
 TWILIO_FROM = os.getenv("TWILIO_FROM_NUMBER", "")
 
+# ── Validate configuration and report EXACT missing secrets ───────────────────
+def validate_smtp_config():
+    missing = []
+
+    if not SMTP_HOST:
+        missing.append("SMTP_HOST")
+    if not os.getenv("SMTP_PORT", "").strip():
+        missing.append("SMTP_PORT")
+    if not SMTP_USER:
+        missing.append("SMTP_USER")
+    if not SMTP_PASS:
+        missing.append("SMTP_PASS")
+    if not ALERT_FROM:
+        missing.append("ALERT_FROM")
+    if not OWNER_EMAIL:
+        missing.append("OWNER_EMAIL")
+
+    if missing:
+        print("[NOTIFIER] ⚠️ Missing required configuration values:")
+        for m in missing:
+            print(f"  - {m}")
+        return False
+
+    # Validate port is numeric
+    port_raw = os.getenv("SMTP_PORT", "").strip()
+    if not port_raw.isdigit():
+        print(f"[NOTIFIER] ⚠️ SMTP_PORT must be an integer, got: '{port_raw}'")
+        return False
+
+    return True
 
 def send_alert(
     subject: str,
@@ -35,21 +65,18 @@ def send_alert(
     to: str = None,
     sms_to: str = None,
 ) -> None:
-    """
-    Send an alert email (and optionally SMS).
-    Defaults to owner email if `to` is not specified.
-    Logs to stdout — never silently fails.
-    """
-    recipient = to or OWNER_EMAIL
-    if not recipient:
-        print(f"[NOTIFIER] ⚠️  No recipient configured. Subject: {subject}")
+
+    # Validate SMTP configuration
+    if not validate_smtp_config():
+        print(f"[NOTIFIER] ⚠️ Cannot send email. Subject: {subject}")
         return
+
+    recipient = to or OWNER_EMAIL
 
     _send_email(subject=subject, body=body, to=recipient)
 
     if sms_to and TWILIO_SID:
         _send_sms(body=f"{subject}\n\n{body[:120]}", to=sms_to)
-
 
 def _send_email(subject: str, body: str, to: str) -> None:
     if not SMTP_USER or not SMTP_PASS:
