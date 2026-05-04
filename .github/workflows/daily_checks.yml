@@ -27,17 +27,17 @@ jobs:
       - name: Write config from secrets
         run: |
           cat > .env << EOF
-          SMTP_HOST=${{ secrets.SMTP_HOST }}
-          SMTP_PORT=${{ secrets.SMTP_PORT }}
-          SMTP_USER=${{ secrets.SMTP_USER }}
-          SMTP_PASS=${{ secrets.SMTP_PASS }}
-          ALERT_FROM=${{ secrets.ALERT_FROM }}
-          OWNER_EMAIL=${{ secrets.OWNER_EMAIL }}
-          TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
-          TWILIO_FROM_NUMBER=${{ secrets.TWILIO_FROM_NUMBER }}
-          DATA_DIR=./data
-          EOF
+SMTP_HOST=${{ secrets.SMTP_HOST }}
+SMTP_PORT=${{ secrets.SMTP_PORT }}
+SMTP_USER=${{ secrets.SMTP_USER }}
+SMTP_PASS=${{ secrets.SMTP_PASS }}
+ALERT_FROM=${{ secrets.ALERT_FROM }}
+OWNER_EMAIL=${{ secrets.OWNER_EMAIL }}
+TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}
+TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
+TWILIO_FROM_NUMBER=${{ secrets.TWILIO_FROM_NUMBER }}
+DATA_DIR=./data
+EOF
 
       - name: Restore data from cache
         uses: actions/cache@v4
