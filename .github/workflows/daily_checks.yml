@@ -24,9 +24,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Write config from secrets
-        run: |
-          cat > .env << EOF
+- name: Create .env file
+  run: |
+    cat > .env << 'EOF'
 SMTP_HOST=${{ secrets.SMTP_HOST }}
 SMTP_PORT=${{ secrets.SMTP_PORT }}
 SMTP_USER=${{ secrets.SMTP_USER }}
@@ -38,6 +38,7 @@ TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
 TWILIO_FROM_NUMBER=${{ secrets.TWILIO_FROM_NUMBER }}
 DATA_DIR=./data
 EOF
+
 
       - name: Restore data from cache
         uses: actions/cache@v4
